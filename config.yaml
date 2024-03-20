@@ -4,63 +4,58 @@ p: &p
   interval: 3600
   health-check:
     enable: true
-    url: https://cp.cloudflare.com
+    url: http://www.gstatic.com/generate_204
     interval: 900
 
 fb: &fb
   type: fallback
-  url: https://cp.cloudflare.com
+  url: http://www.gstatic.com/generate_204
   interval: 900
   tolerance: 500
   lazy: true
   use:
    - 魔法
-   - 火星
    - 国际机场
 
 ba: &ba
   type: load-balance
   strategy: round-robin
   disable-udp: false
-  url: https://cp.cloudflare.com
+  url: http://www.gstatic.com/generate_204
   timeout: 2000
   interval: 900
   tolerance: 500
   lazy: true
   use: 
   - 魔法
-  - 火星
   - 国际机场
 
 s: &s
   type: select
   use:
    - 魔法
-   - 火星
    - 国际机场
    
 re: &re
   type: relay
-  url: https://cp.cloudflare.com
+  url: http://www.gstatic.com/generate_204
   timeout: 2000
   interval: 900
   tolerance: 500
   lazy: true
   use:
    - 魔法
-   - 火星
    - 国际机场
 
 t: &t
   type: url-test
-  url: https://cp.cloudflare.com
+  url: http://www.gstatic.com/generate_204
   timeout: 2000
   interval: 900
   tolerance: 50
   lazy: true
   use:
    - 魔法
-   - 火星
    - 国际机场
 
 pr: &pr
@@ -78,7 +73,6 @@ me: &me
   type: select
   use:
    - 魔法
-   - 火星
    - 国际机场
   proxies:
     - PASS
@@ -109,10 +103,6 @@ proxy-providers:
     <<: *p
     url: https://sub.hgwc.xyz/api/v1/client/subscribe?token=1b0b4d20d76f69c8a268cae53ada0437
     path: "./proxy_provider/魔法2.yaml"
-  火星:
-    <<: *p
-    path: "./proxy_provider/火星.yaml"
-    url: https://st-sub.fly.dev/v2b/hx/api/v1/client/subscribe?token=07233a708b5cde10f19f366ee27d0707
   国际机场:
     <<: *p
     path: "./proxy_provider/国际.yaml"
@@ -125,8 +115,8 @@ geox-url:
   geosite: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geosite.dat"
   mmdb: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geoip.metadb"
 
-geo-auto-update: false # 是否自动更新 geodata
-geo-update-interval: 24 # 更新间隔，单位：小时
+geo-auto-update: true # 是否自动更新 geodata
+geo-update-interval: 48 # 更新间隔，单位：小时
 
 #===代理组======================================================================================================================================
 
@@ -203,8 +193,6 @@ proxy-groups:
   - name: 🎞️ YouTube
     <<: *me
  
-
-  
   - name: 专线
     filter: "IPLC|IEPL|CN2|GAPN|CUVIP|AIA|iplc|iepl"
     <<: *s
@@ -271,7 +259,7 @@ proxy-groups:
     filter: 沈阳|镇江|海南|济南|深圳|湖南|江西|浙江|杭州|鞍山|广州
     <<: *ba
   - name: 🚀🇨🇳✈️_relay
-    filter: ^((?!(广州|沈阳|鞍山|镇江|海南|济南|深圳|湖南|江西|浙江|杭州)).)*$
+    filter: 沈阳|镇江|海南|济南|深圳|湖南|江西|浙江|杭州|鞍山|广州
     <<: *re
   - name: 🍃广告过滤
     type: select
@@ -377,15 +365,32 @@ rule-providers:
     <<: *h
     url: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/PrivateTracker/PrivateTracker.yaml
     path: "./rule_provider/PrivateTracker.yaml"
+  UnBan:
+    <<: *h
+    url: https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/UnBan.list
+    path: "./rule_provider/UnBan.yaml"
     
 #===规则============================================================================================================================
+
+
 rules:
   - IP-CIDR,127.0.0.1/32,REJECT,no-resolve
- # - DOMAIN-SUFFIX,push.apple.com,DIRECT
  # - PROCESS-NAME,clash,REJECT
  # - PROCESS-NAME,com.unexpected.ts,DIRECT
   - AND,((NETWORK,UDP),(GEOSITE,GEOLOCATION-!CN),(DST-PORT,443)),REJECT
   - RULE-SET,Lan,DIRECT
+ # 解决DNS泄露
+  - DOMAIN-SUFFIX,xn--ngstr-lra8j.com,🤖 Copilot
+  - DOMAIN-SUFFIX,services.googleapis.cn,🤖 Copilot
+  - DOMAIN-SUFFIX,xn--ngstr-lra8j.com,🎞️ YouTube
+  - DOMAIN-SUFFIX,services.googleapis.cn,🎞️ YouTube
+  - DOMAIN-SUFFIX,xn--ngstr-lra8j.com,📲 Telegram
+  - DOMAIN-SUFFIX,services.googleapis.cn,📲 Telegram
+  - DOMAIN-SUFFIX,xn--ngstr-lra8j.com,🐔 Google
+  - DOMAIN-SUFFIX,services.googleapis.cn,🐔 Google
+  - DOMAIN-SUFFIX,xn--ngstr-lra8j.com,🚀🧱✈️
+  - DOMAIN-SUFFIX,services.googleapis.cn,🚀🧱✈️
+  - RULE-SET,UnBan,🇨🇳墙内
   - RULE-SET,AD,🍃广告过滤
 #  - AND,((NETWORK,TCP),(DOMAIN-SUFFIX,dot.pub),(DST-PORT,80/443)),[表情]受限
   - DOMAIN-SUFFIX,dot.pub,🇨🇳墙内
@@ -411,12 +416,5 @@ rules:
   - RULE-SET,Telegram,📲 Telegram
   - RULE-SET,Proxy_Classical,🧱墙外
   - RULE-SET,China,🇨🇳墙内
-
-
-#  - AND,((NETWORK,TCP),(RULE-SET,China),(DST-PORT,80/443)),[表情]受限
-
-#  - AND,((NETWORK,TCP),(GEOIP,CN),(DST-PORT,80/443)),[表情]受限
-
-#  - GEOIP,LAN,DIRECT
-  - GEOIP,CN,🇨🇳墙内
+  - GEOIP,CN,🇨🇳墙内,no-resolve
   - MATCH,🐟 MATCH
